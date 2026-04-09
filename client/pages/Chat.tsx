@@ -6,7 +6,7 @@ import {
   Mic,
   Home,
   Sparkles,
-  Volume2Off,
+  VolumeX,
   Volume2,
 } from "lucide-react";
 import { ChatRequest, ChatResponse } from "@shared/api";
@@ -253,11 +253,12 @@ export default function Chat() {
             <button
               onClick={() => setSoundEnabled(!soundEnabled)}
               className="p-2 rounded-lg bg-card border border-border hover:border-primary/50 transition"
+              title={soundEnabled ? "Disable sound" : "Enable sound"}
             >
               {soundEnabled ? (
                 <Volume2 className="w-4 h-4" />
               ) : (
-                <Volume2Off className="w-4 h-4" />
+                <VolumeX className="w-4 h-4" />
               )}
             </button>
             <button
