@@ -12,6 +12,8 @@ import {
 import { ChatRequest, ChatResponse } from "@shared/api";
 import { useSpeechRecognition, useSpeechSynthesis } from "@/hooks/use-speech-recognition";
 import { Avatar3D } from "@/components/Avatar3D";
+import { CameraPreview } from "@/components/CameraPreview";
+import { WelcomeOverlay } from "@/components/WelcomeOverlay";
 
 const PERSONAS = [
   {
@@ -42,6 +44,13 @@ const PERSONAS = [
     greeting:
       "Hi! I'm Sia! I love casual conversations and helping with language learning. What's on your mind?",
   },
+  {
+    id: "valkyrie",
+    name: "Valkyrie",
+    role: "Hardball Interviewer",
+    greeting:
+      "I'm Valkyrie. Let's prepare you for the toughest challenges. Ready to be pushed to your limits?",
+  },
 ];
 
 interface Message {
@@ -59,6 +68,8 @@ export default function Chat() {
   const [confidenceScore, setConfidenceScore] = useState(75);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [showChat, setShowChat] = useState(false);
+  const [cameraEnabled, setCameraEnabled] = useState(true);
+  const [showWelcome, setShowWelcome] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const {
@@ -215,6 +226,8 @@ export default function Chat() {
 
   return (
     <div className="h-screen bg-background flex flex-col overflow-hidden">
+      <WelcomeOverlay isOpen={showWelcome} onClose={() => setShowWelcome(false)} />
+
       {/* Header */}
       <header className="border-b border-border bg-background/80 backdrop-blur-md sticky top-0 z-40 px-6 py-3">
         <div className="flex items-center justify-between">
@@ -270,13 +283,8 @@ export default function Chat() {
           />
 
           {/* User camera preview (bottom right corner) */}
-          <div className="absolute bottom-4 right-4 w-24 h-24 rounded-lg bg-gradient-to-br from-primary/20 to-secondary/20 border border-primary/30 overflow-hidden">
-            <div className="w-full h-full flex items-center justify-center text-white text-center">
-              <div>
-                <p className="text-xs font-semibold">Your</p>
-                <p className="text-xs">Camera</p>
-              </div>
-            </div>
+          <div className="absolute bottom-4 right-4 w-28 h-28 rounded-lg border-2 border-primary/50 overflow-hidden shadow-lg">
+            <CameraPreview isListening={isListening} />
           </div>
         </div>
 
