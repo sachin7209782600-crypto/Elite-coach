@@ -77,6 +77,8 @@ export default function Chat() {
     transcript,
     interimTranscript,
     isSupported: isSpeechRecognitionSupported,
+    error: speechError,
+    clearError: clearSpeechError,
     startListening,
     stopListening,
     resetTranscript,
@@ -291,6 +293,26 @@ export default function Chat() {
 
         {/* Chat Sidebar */}
         <div className="lg:col-span-1 bg-card border-l border-border flex flex-col overflow-hidden">
+          {/* Error Display */}
+          {speechError && (
+            <div className="bg-red-500/20 border border-red-500/30 text-red-400 text-xs p-2 rounded-lg m-3">
+              <div className="flex items-start justify-between">
+                <span>{speechError}</span>
+                <button
+                  onClick={clearSpeechError}
+                  className="ml-2 hover:text-red-300"
+                >
+                  ×
+                </button>
+              </div>
+              {speechError.includes("network") && (
+                <p className="text-xs mt-1 opacity-80">
+                  Retrying automatically...
+                </p>
+              )}
+            </div>
+          )}
+
           {/* Messages */}
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
             {messages.map((message) => (
@@ -341,23 +363,44 @@ export default function Chat() {
 
           {/* Input Area */}
           <div className="border-t border-border p-3 space-y-2">
+            {speechError && speechError.includes("network") && (
+              <div className="p-2 bg-yellow-500/10 border border-yellow-500/20 rounded text-xs text-yellow-600 flex items-center gap-2">
+                <span className="animate-spin">⟳</span>
+                <span>Reconnecting voice...</span>
+              </div>
+            )}
+            {speechError && !speechError.includes("network") && (
+              <div className="p-2 bg-red-500/10 border border-red-500/20 rounded text-xs text-red-600">
+                <p>{speechError}</p>
+                <p className="mt-1 opacity-80">You can still type your message below</p>
+              </div>
+            )}
             {interimTranscript && (
               <div className="p-2 bg-primary/10 border border-primary/20 rounded text-xs text-primary">
-                {interimTranscript}
+                🎤 {interimTranscript}
               </div>
             )}
             <div className="flex gap-2">
               <button
-                onClick={toggleVoiceInput}
-                disabled={!isSpeechRecognitionSupported}
-                className={`p-2 rounded transition flex-shrink-0 ${
-                  isListening
-                    ? "bg-primary text-white animate-pulse"
-                    : "bg-card border border-border hover:border-primary/50 disabled:opacity-50"
-                }`}
-              >
-                <Mic className="w-4 h-4" />
-              </button>
+              onClick={toggleVoiceInput}
+              disabled={!isSpeechRecognitionSupported}
+              className={`p-2 rounded transition flex-shrink-0 ${
+                isListening
+                  ? "bg-primary text-white animate-pulse"
+                  : speechError && speechError.includes("network")
+                  ? "bg-yellow-500/20 border border-yellow-500/30 text-yellow-600"
+                  : "bg-card border border-border hover:border-primary/50 disabled:opacity-50"
+              }`}
+              title={
+                speechError
+                  ? speechError
+                  : isSpeechRecognitionSupported
+                  ? "Click to speak"
+                  : "Speech recognition not supported"
+              }
+            >
+              <Mic className="w-4 h-4" />
+            </button>
               <input
                 type="text"
                 value={input}
