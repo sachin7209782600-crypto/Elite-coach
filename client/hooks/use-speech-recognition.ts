@@ -37,7 +37,7 @@ export function useSpeechRecognition() {
     const recognition = new SpeechRecognition();
     recognition.continuous = true;
     recognition.interimResults = true;
-    recognition.lang = "en-US";
+    recognition.lang = "en-US"; // Default language, will be updated via setLanguage
     recognition.maxAlternatives = 1;
 
     recognition.onstart = () => {
@@ -157,6 +157,12 @@ export function useSpeechRecognition() {
     setError(null);
   }, []);
 
+  const setLanguage = useCallback((languageCode: string) => {
+    if (recognitionRef.current) {
+      recognitionRef.current.lang = languageCode;
+    }
+  }, []);
+
   return {
     isListening,
     transcript,
@@ -164,37 +170,53 @@ export function useSpeechRecognition() {
     isSupported,
     error,
     clearError,
+    setLanguage,
     startListening,
     stopListening,
     resetTranscript,
   };
 }
 
-// Text-to-Speech hook
+// Text-to-Speech hook with language support
 export function useSpeechSynthesis() {
   const [isSupported] = useState(() => {
     return typeof window !== "undefined" && "speechSynthesis" in window;
   });
+  const [language, setLanguage] = useState("en-US");
 
-  const speak = useCallback((text: string, voiceIndex: number = 0) => {
-    if (!isSupported) return;
+  const speak = useCallback(
+    (text: string, voiceIndex: number = 0, lang?: string) => {
+      if (!isSupported) return;
 
-    // Cancel any ongoing speech
-    window.speechSynthesis.cancel();
+      // Cancel any ongoing speech
+      window.speechSynthesis.cancel();
 
-    const utterance = new SpeechSynthesisUtterance(text);
-    const voices = window.speechSynthesis.getVoices();
+      const utterance = new SpeechSynthesisUtterance(text);
+      const voices = window.speechSynthesis.getVoices();
 
-    if (voices.length > voiceIndex) {
-      utterance.voice = voices[voiceIndex];
-    }
+      // Set language
+      const effectiveLanguage = lang || language;
+      utterance.lang = effectiveLanguage;
 
-    utterance.rate = 1;
-    utterance.pitch = 1;
-    utterance.volume = 1;
+      // Find a voice that matches the language
+      const matchingVoice = voices.find((v) =>
+        v.lang.startsWith(effectiveLanguage.split("-")[0])
+      );
 
-    window.speechSynthesis.speak(utterance);
-  }, [isSupported]);
+      if (matchingVoice) {
+        utterance.voice = matchingVoice;
+      } else if (voices.length > voiceIndex) {
+        utterance.voice = voices[voiceIndex];
+      }
+
+      utterance.rate = 0.95;
+      utterance.pitch = 1.1;
+      utterance.volume = 1;
+
+      window.speechSynthesis.speak(utterance);
+    },
+    [isSupported, language]
+  );
 
   const stop = useCallback(() => {
     if (isSupported) {
@@ -202,5 +224,5 @@ export function useSpeechSynthesis() {
     }
   }, [isSupported]);
 
-  return { speak, stop, isSupported };
+  return { speak, stop, isSupported, setLanguage };
 }
